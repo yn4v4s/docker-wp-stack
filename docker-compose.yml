@@ -1,0 +1,51 @@
+version: '3.1'
+
+services:
+
+  wordpress:
+    image: ${PROJECT}:custom
+    container_name: ${PROJECT}-wpfpm
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: w0rdpr355
+      WORDPRESS_DB_NAME: wordpress
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - UID=${UID}
+        - GID=${GID}
+        - USERNAME=${USERNAME}
+    volumes:
+      - ./html:/var/www/html
+
+  web:
+    depends_on:
+      - wordpress
+    image: nginx:latest
+    container_name: ${PROJECT}-www
+    hostname: ${PROJECT}
+    ports:
+      - ${NGINX_PORT}:${NGINX_PORT}
+    environment:
+      - NGINX_PORT=${NGINX_PORT}
+    volumes:
+      - ./templates:/etc/nginx/templates:ro
+      - ./html:/var/www/html:ro
+
+  db:
+    image: mysql:5.7
+    container_name: ${PROJECT}-db
+    ports:
+      - 33060:3306
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: w0rdpr355
+      MYSQL_RANDOM_ROOT_PASSWORD: '1'
+    volumes:
+      - db:/var/lib/mysql
+
+volumes:
+  db: null
